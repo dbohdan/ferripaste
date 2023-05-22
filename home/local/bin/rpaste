@@ -70,10 +70,11 @@ proc cli argv {
         exit 1
     }
 
-    if {($opts(u) ne {})
-        + ($opts(r) ne {})
-        + [llength $argv]
-        != 1} {
+    if {(($opts(u) ne {})
+         + ($opts(r) ne {})
+         + [llength $argv]
+         != 1)
+        || ($opts(1) && [llength $argv] != 1)} {
         usage $options $usage
         exit 1
     }
