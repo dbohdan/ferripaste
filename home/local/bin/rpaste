@@ -8,7 +8,7 @@ source $env(HOME)/.config/rpaste/config.tcl
 proc main argv {
     global config
 
-    lassign [cli $argv] src ext expire
+    lassign [cli $argv] src oneshot ext remote url verbose expire
 
     set filename [file tail $src]
     if {$ext ne {} && [regexp {\.} $filename]} {
@@ -18,15 +18,27 @@ proc main argv {
     set id [base32-timestamp [clock seconds]]
 
     set dest ${rootname}.${id}${ext}
-    set opts {}
+    set opts --fail
     if {$expire ne {}} {
         lappend opts --header expire:$expire
     }
+    if {$remote ne {}} {
+        lappend opts --form "remote=$remote;filename=$id"
+    }
+    if {$url ne {}} {
+        lappend opts --form url=$url
+    }
+    if {$remote eq {} && $url eq {}} {
+        set field [expr { $oneshot ? {oneshot} : {file} }]
+        lappend opts --form "$field=@$src;filename=$dest"
+    }
+
+    if {$verbose} {
+        puts stderr [list cURL opts: {*}$opts]
+    }
+
     exec curl \
-        --fail \
-        --form "file=@$src;filename=$dest" \
         --header "Authorization: $config(token)" \
-        --silent \
         {*}$opts \
         $config(url) \
         >@ stdout \
@@ -35,7 +47,11 @@ proc main argv {
 
 proc cli argv {
     set options {
+        {1 {One shot}}
         {e.arg {} {File extension}}
+        {r.arg {} {Remote source URL}}
+        {u.arg {} {URL to shorten}}
+        {v {Verbose mode}}
         {x.arg {} {Expiration time}}
     }
     set usage ": [file tail [info script]] \[options\] src \noptions:"
@@ -54,12 +70,15 @@ proc cli argv {
         exit 1
     }
 
-    if {[llength $argv] != 1} {
+    if {($opts(u) ne {})
+        + ($opts(r) ne {})
+        + [llength $argv]
+        != 1} {
         usage $options $usage
         exit 1
     }
 
-    list [lindex $argv 0] $opts(e) $opts(x)
+    list [lindex $argv 0] $opts(1) $opts(e) $opts(r) $opts(u) $opts(v) $opts(x)
 }
 
 proc usage {options usage} {
