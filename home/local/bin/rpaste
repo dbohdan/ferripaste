@@ -1,17 +1,14 @@
 #! /usr/bin/env tclsh
 
 package require base32
+package require cmdline
 
 source $env(HOME)/.config/rpaste/config.tcl
 
-proc main args {
+proc main argv {
     global config
 
-    if {[llength $args] < 1 || [llength $args] > 2} {
-        puts stderr {usage: rpaste src [.ext]}
-        return 1
-    }
-    lassign $args src ext
+    lassign [cli $argv] src ext expire
 
     set filename [file tail $src]
     if {$ext ne {} && [regexp {\.} $filename]} {
@@ -21,14 +18,52 @@ proc main args {
     set id [base32-timestamp [clock seconds]]
 
     set dest ${rootname}.${id}${ext}
+    set opts {}
+    if {$expire ne {}} {
+        lappend opts --header expire:$expire
+    }
     exec curl \
         --fail \
         --form "file=@$src;filename=$dest" \
         --header "Authorization: $config(token)" \
         --silent \
+        {*}$opts \
         $config(url) \
         >@ stdout \
         2>@ stderr \
+}
+
+proc cli argv {
+    set options {
+        {e.arg {} {File extension}}
+        {x.arg {} {Expiration time}}
+    }
+    set usage ": [file tail [info script]] \[options\] src \noptions:"
+
+    foreach arg $argv {
+        if {$arg in {-? -h -help --help}} {
+            usage $options $usage
+            exit 0
+        }
+    }
+
+    try {
+        array set opts [::cmdline::getoptions argv $options $usage]
+    } trap {CMDLINE USAGE} _ {
+        usage $options $usage
+        exit 1
+    }
+
+    if {[llength $argv] != 1} {
+        usage $options $usage
+        exit 1
+    }
+
+    list [lindex $argv 0] $opts(e) $opts(x)
+}
+
+proc usage {options usage} {
+    puts stderr [::cmdline::usage $options $usage]
 }
 
 # Suffers from the Y2038 problem.
@@ -36,4 +71,4 @@ proc base32-timestamp t {
     string tolower [regsub =*$ [base32::encode [binary format Iu $t]] {}]
 }
 
-main {*}$argv
+main $argv
