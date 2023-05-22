@@ -1,25 +1,39 @@
-#! /bin/sh
-set -eu
+#! /usr/bin/env tclsh
 
-. "$HOME/.config/rpaste/config.sh"
+package require base32
 
-rpaste() {
-    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-        echo 'usage: rpaste src [.ext]' >/dev/stderr
+source $env(HOME)/.config/rpaste/config.tcl
+
+proc main args {
+    global config
+
+    if {[llength $args] < 1 || [llength $args] > 2} {
+        puts stderr {usage: rpaste src [.ext]}
         return 1
-    fi
+    }
+    lassign $args src ext
 
-    src=$1
-    basename=$(basename "$src")
-    ext=${2:-}
-    if [ -n "$ext" ] && printf '%s' "$basename" | grep -q '\.'; then
-        ext=.${basename#*.}
-    fi
-    rootname=${basename%%.*}
-    id=$(printf %08x "$(date +%s)")
+    set filename [file tail $src]
+    if {$ext ne {} && [regexp {\.} $filename]} {
+        set ext .[file extension $filename]
+    }
+    set rootname [file rootname $filename]
+    set id [base32-timestamp [clock seconds]]
 
-    dest=$rootname.$id$ext
-    curl -F "file=@$src;filename=$dest" -H "Authorization: $token" "$url"
+    set dest ${rootname}.${id}${ext}
+    exec curl \
+        --fail \
+        --form "file=@$src;filename=$dest" \
+        --header "Authorization: $config(token)" \
+        --silent \
+        $config(url) \
+        >@ stdout \
+        2>@ stderr \
 }
 
-rpaste "$@"
+# Suffers from the Y2038 problem.
+proc base32-timestamp t {
+    string tolower [regsub =*$ [base32::encode [binary format Iu $t]] {}]
+}
+
+main {*}$argv
