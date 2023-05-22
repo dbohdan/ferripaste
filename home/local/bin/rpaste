@@ -1,0 +1,25 @@
+#! /bin/sh
+set -eu
+
+. "$HOME/.config/rpaste/config.sh"
+
+rpaste() {
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+        echo 'usage: rpaste src [.ext]' >/dev/stderr
+        return 1
+    fi
+
+    src=$1
+    basename=$(basename "$src")
+    ext=${2:-}
+    if [ -n "$ext" ] && printf '%s' "$basename" | grep -q '\.'; then
+        ext=.${basename#*.}
+    fi
+    rootname=${basename%%.*}
+    id=$(printf %08x "$(date +%s)")
+
+    dest=$rootname.$id$ext
+    curl -F "file=@$src;filename=$dest" -H "Authorization: $token" "$url"
+}
+
+rpaste "$@"
