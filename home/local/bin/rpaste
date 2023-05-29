@@ -11,8 +11,8 @@ proc main argv {
     lassign [cli $argv] src oneshot ext remote url verbose expire
 
     set filename [file tail $src]
-    if {$ext ne {} && [regexp {\.} $filename]} {
-        set ext .[file extension $filename]
+    if {$ext eq {} && [regexp {\.} $filename]} {
+        set ext [file extension $filename]
     }
     set rootname [file rootname $filename]
     set id [base32-timestamp [clock seconds]]
