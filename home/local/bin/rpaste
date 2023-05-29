@@ -7,16 +7,21 @@ source $env(HOME)/.config/rpaste/config.tcl
 proc main argv {
     global config
 
-    lassign [cli $argv] src oneshot ext remote url verbose expire
+    lassign [cli $argv] src oneshot ext noId remote url verbose expire
 
     set filename [file tail $src]
-    if {$ext eq {} && [regexp {\.} $filename]} {
+    if {$ext eq {} && [file extension $filename] ne {}} {
         set ext [file extension $filename]
     }
     set rootname [file rootname $filename]
     set id [encode-timestamp [clock seconds]]
 
-    set dest ${rootname}.${id}${ext}
+    set dest $rootname
+    if {!$noId} {
+        append dest .$id
+    }
+    append dest $ext
+
     set opts --fail
     if {$expire ne {}} {
         lappend opts --header expire:$expire
@@ -48,6 +53,7 @@ proc cli argv {
     set options {
         {1 {One shot}}
         {e.arg {} {File extension}}
+        {I {No id suffix}}
         {r.arg {} {Remote source URL}}
         {u.arg {} {URL to shorten}}
         {v {Verbose mode}}
@@ -78,7 +84,7 @@ proc cli argv {
         exit 1
     }
 
-    list [lindex $argv 0] $opts(1) $opts(e) $opts(r) $opts(u) $opts(v) $opts(x)
+    list [lindex $argv 0] $opts(1) $opts(e) $opts(I) $opts(r) $opts(u) $opts(v) $opts(x)
 }
 
 proc usage {options usage} {
