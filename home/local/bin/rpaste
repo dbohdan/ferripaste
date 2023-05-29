@@ -1,6 +1,5 @@
 #! /usr/bin/env tclsh
 
-package require base32
 package require cmdline
 
 source $env(HOME)/.config/rpaste/config.tcl
@@ -15,7 +14,7 @@ proc main argv {
         set ext [file extension $filename]
     }
     set rootname [file rootname $filename]
-    set id [base32-timestamp [clock seconds]]
+    set id [encode-timestamp [clock seconds]]
 
     set dest ${rootname}.${id}${ext}
     set opts --fail
@@ -86,9 +85,8 @@ proc usage {options usage} {
     puts stderr [::cmdline::usage $options $usage]
 }
 
-# Suffers from the Y2038 problem.
-proc base32-timestamp t {
-    string tolower [regsub =*$ [base32::encode [binary format Iu $t]] {}]
+proc encode-timestamp t {
+    return $t
 }
 
 main $argv
