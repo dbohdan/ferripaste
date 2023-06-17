@@ -16,7 +16,7 @@ proc main argv {
     set rootname [file rootname $filename]
     set id [encode-timestamp [clock seconds]]
 
-    set dest $rootname
+    set dest [regsub -all {[\s%]} $rootname -]
     if {!$noId} {
         append dest .$id
     }
