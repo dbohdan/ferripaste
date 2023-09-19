@@ -3,21 +3,21 @@
 from __future__ import annotations
 
 import argparse
-import configparser
 import re
 import shlex
 import subprocess as sp
 import sys
 import time
+import tomllib
 from pathlib import Path
+from typing import Any
 
-CONFIG_FILE = Path.home() / ".config/rpaste/config.ini"
-CONFIG_SECTION = "rustypaste"
+CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
 
 
 def main() -> None:
     args = cli()
-    conf = config()[CONFIG_SECTION]
+    conf = config()
 
     ext = args.ext
     dest = ""
@@ -101,13 +101,11 @@ def cli() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def config() -> configparser.ConfigParser:
-    config = configparser.ConfigParser()
-    config.read_string(CONFIG_FILE.read_text())
+def config() -> dict[str, Any]:
+    config = tomllib.loads(CONFIG_FILE.read_text())
 
-    sec = config[CONFIG_SECTION]
-    sec["token"] = sp.run(
-        ["pass", "show", sec["pass-name"]],
+    config["token"] = sp.run(
+        ["pass", "show", config["pass-name"]],
         capture_output=True,
         check=True,
         text=True,
