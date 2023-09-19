@@ -1,98 +1,120 @@
-#! /usr/bin/env tclsh
+#! /usr/bin/env python3
 
-package require cmdline
+from __future__ import annotations
 
-source $env(HOME)/.config/rpaste/config.tcl
+import argparse
+import configparser
+import re
+import shlex
+import subprocess as sp
+import sys
+import time
+from pathlib import Path
 
-proc main argv {
-    global config
+CONFIG_FILE = Path.home() / ".config/rpaste/config.ini"
+CONFIG_SECTION = "rustypaste"
 
-    lassign [cli $argv] src oneshot expire noId remote url verbose ext
 
-    set filename [file tail $src]
-    if {$ext eq {} && [file extension $filename] ne {}} {
-        set ext [file extension $filename]
-    }
-    set rootname [file rootname $filename]
-    set id [encode-timestamp [clock seconds]]
+def main() -> None:
+    args = cli()
+    conf = config()[CONFIG_SECTION]
 
-    set dest [regsub -all {[\s%]} $rootname -]
-    if {!$noId} {
-        append dest .$id
-    }
-    append dest $ext
+    ext = args.ext
+    dest = ""
+    upload_id = str(int(time.time()))
 
-    set opts --fail
-    if {$expire ne {}} {
-        lappend opts --header expire:$expire
-    }
-    if {$remote ne {}} {
-        lappend opts --form "remote=$remote;filename=$id"
-    }
-    if {$url ne {}} {
-        lappend opts --form url=$url
-    }
-    if {$remote eq {} && $url eq {}} {
-        set field [expr { $oneshot ? {oneshot} : {file} }]
-        lappend opts --form "$field=@$src;filename=$dest"
-    }
+    if args.file:
+        if not ext:
+            ext = args.file.suffix
 
-    if {$verbose} {
-        puts stderr [list cURL opts: {*}$opts]
-    }
+        dest = re.sub(r"[\s%]", "-", args.file.stem)
+        if not args.no_id:
+            dest = f"{dest}.{upload_id}"
+        dest += ext
 
-    exec curl \
-        --header "Authorization: $config(token)" \
-        {*}$opts \
-        $config(url) \
-        >@ stdout \
-        2>@ stderr \
-}
+    opts = ["--fail"]
 
-proc cli argv {
-    set options {
-        {1 {One shot}}
-        {e.arg {} {Expiration time}}
-        {I {No id suffix}}
-        {r.arg {} {Remote source URL}}
-        {u.arg {} {URL to shorten}}
-        {v {Verbose mode}}
-        {x.arg {} {File extension}}
-    }
-    set usage ": [file tail [info script]] \[options\] src \noptions:"
+    if args.expire_time:
+        opts.extend(["--header", f"expire:{args.expire_time}"])
 
-    foreach arg $argv {
-        if {$arg in {-? -h -help --help}} {
-            usage $options $usage
-            exit 0
-        }
-    }
+    if args.remote_url:
+        opts.extend(["--form", f"remote={args.remote_url};filename={upload_id}"])
+    elif args.url_to_shorten:
+        opts.extend(["--form", f"url={args.url_to_shorten}"])
+    else:
+        field = "oneshot" if args.one_shot else "file"
+        opts.extend(["--form", f"{field}=@{args.file};filename={dest}"])
 
-    try {
-        array set opts [::cmdline::getoptions argv $options $usage]
-    } trap {CMDLINE USAGE} _ {
-        usage $options $usage
-        exit 1
-    }
+    if args.verbose:
+        print(f"cURL opts: {shlex.join(opts)}", file=sys.stderr)
 
-    if {(($opts(u) ne {})
-         + ($opts(r) ne {})
-         + [llength $argv]
-         != 1)
-        || ($opts(1) && [llength $argv] != 1)} {
-        usage $options $usage
-        exit 1
-    }
+    try:
+        sp.run(
+            ["curl", "--header", f"Authorization: {conf['token']}", *opts, conf["url"]],
+            check=True,
+        )
+    except sp.CalledProcessError as e:
+        sys.exit(e.returncode)
 
-    list [lindex $argv 0] $opts(1) $opts(e) $opts(I) $opts(r) $opts(u) $opts(v) $opts(x)
-}
 
-proc usage {options usage} {
-    puts stderr [::cmdline::usage $options $usage]
-}
+def cli() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
 
-proc encode-timestamp t {
-    return $t
-}
+    parser.add_argument("-1", action="store_true", dest="one_shot", help="One shot")
+    parser.add_argument(
+        "-e",
+        dest="expire_time",
+        help="Expiration time",
+        metavar="TIME",
+    )
+    parser.add_argument("-I", action="store_true", dest="no_id", help="No id suffix")
 
-main $argv
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument(
+        "file",
+        help="File to upload",
+        nargs=argparse.OPTIONAL,
+        type=Path,
+    )
+    action.add_argument(
+        "-r",
+        dest="remote_url",
+        help="Remote source URL",
+        metavar="URL",
+    )
+    action.add_argument(
+        "-u",
+        dest="url_to_shorten",
+        help="URL to shorten",
+        metavar="URL",
+    )
+
+    parser.add_argument("-v", action="store_true", dest="verbose", help="Verbose mode")
+    parser.add_argument(
+        "-x",
+        default="",
+        dest="ext",
+        help="File extension",
+        metavar="EXT",
+    )
+
+    return parser.parse_args()
+
+
+def config() -> configparser.ConfigParser:
+    config = configparser.ConfigParser()
+    config.read_string(CONFIG_FILE.read_text())
+
+    sec = config[CONFIG_SECTION]
+    sec["token"] = sp.run(
+        ["pass", "show", sec["pass-name"]],
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+
+    return config
+
+
+if __name__ == "__main__":
+    main()
