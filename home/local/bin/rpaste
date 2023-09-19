@@ -4,15 +4,20 @@ from __future__ import annotations
 
 import argparse
 import re
-import shlex
 import subprocess as sp
 import sys
 import time
-import tomllib
+import traceback
 from pathlib import Path
 from typing import Any
 
+import requests
+import tomllib
+
+AUTHZ_HEADER = "Authorization"
+FORMAT_MAX_BODY_LEN = 200
 CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
+TIMEOUT = 30
 
 
 def main() -> None:
@@ -32,29 +37,60 @@ def main() -> None:
             dest = f"{dest}.{upload_id}"
         dest += ext
 
-    opts = ["--fail"]
+    headers = {AUTHZ_HEADER: conf["token"]}
+    files = {}
 
     if args.expire_time:
-        opts.extend(["--header", f"expire:{args.expire_time}"])
-
-    if args.remote_url:
-        opts.extend(["--form", f"remote={args.remote_url};filename={upload_id}"])
-    elif args.url_to_shorten:
-        opts.extend(["--form", f"url={args.url_to_shorten}"])
-    else:
-        field = "oneshot" if args.one_shot else "file"
-        opts.extend(["--form", f"{field}=@{args.file};filename={dest}"])
-
-    if args.verbose:
-        print(f"cURL opts: {shlex.join(opts)}", file=sys.stderr)
+        headers["expire"] = args.expire_time
 
     try:
-        sp.run(
-            ["curl", "--header", f"Authorization: {conf['token']}", *opts, conf["url"]],
-            check=True,
+        if args.remote_url:
+            files["remote"] = args.remote_url
+        elif args.url_to_shorten:
+            files["url"] = args.url_to_shorten
+        else:
+            field = "oneshot" if args.one_shot else "file"
+            files[field] = (dest, args.file.open("rb"), "application/octet-stream")
+
+        req = requests.Request(
+            "POST",
+            conf["url"],
+            headers=headers,
+            files=files,
         )
-    except sp.CalledProcessError as e:
-        sys.exit(e.returncode)
+        prepared = req.prepare()
+        if args.verbose:
+            print(
+                format_request(prepared),
+                file=sys.stderr,
+            )
+
+        s = requests.Session()
+        resp = s.send(
+            prepared,
+            timeout=TIMEOUT,
+        )
+        resp.raise_for_status()
+
+        file_url = resp.text.rstrip()
+        print(file_url)
+
+        if not args.one_shot:
+            with requests.get(file_url, stream=True, timeout=TIMEOUT) as r:
+                if r.status_code != requests.codes.ok:
+                    print(
+                        f"error: URL verification failed (status {r.status_code})",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+
+    except (FileNotFoundError, requests.exceptions.RequestException) as e:
+        if args.verbose:
+            print(traceback.format_exc(), end="", file=sys.stderr)
+        else:
+            print(f"error: {e}", file=sys.stderr)
+
+        sys.exit(1)
 
 
 def cli() -> argparse.Namespace:
@@ -109,9 +145,32 @@ def config() -> dict[str, Any]:
         capture_output=True,
         check=True,
         text=True,
-    ).stdout.strip()
+    ).stdout.rstrip()
 
     return config
+
+
+def format_request(prepared: requests.PreparedRequest) -> str:
+    headers = (
+        f"{header}: {'***' if header == AUTHZ_HEADER else value}"
+        for header, value in prepared.headers.items()
+    )
+
+    pb = prepared.body
+    body = "(empty body)"
+    if pb:
+        body = str(pb) if len(pb) < FORMAT_MAX_BODY_LEN else f"({len(pb)} byte body)"
+
+    req_info = [
+        "Request:",
+        prepared.url,
+        "",
+        *headers,
+        "",
+        body,
+    ]
+
+    return "\n    ".join(req_info)
 
 
 if __name__ == "__main__":
