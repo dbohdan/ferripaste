@@ -24,18 +24,18 @@ def main() -> None:
     args = cli()
     conf = config()
 
-    ext = args.ext
     dest = ""
     upload_id = str(int(time.time()))
 
     if args.file:
-        if not ext:
+        if args.filename:
+            dest = args.filename
+        else:
             ext = args.file.suffix
-
-        dest = re.sub(r"[\s%]", "-", args.file.stem)
-        if not args.no_id:
-            dest = f"{dest}.{upload_id}"
-        dest += ext
+            dest = re.sub(r"[\s%]", "-", args.file.stem)
+            if not args.no_id:
+                dest = f"{dest}.{upload_id}"
+            dest += ext + args.suffix
 
     headers = {AUTHZ_HEADER: conf["token"]}
     files = {}
@@ -96,29 +96,46 @@ def main() -> None:
 def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-1", action="store_true", dest="one_shot", help="one shot")
+    action_group = parser.add_mutually_exclusive_group(required=True)
+    fn_group = parser.add_mutually_exclusive_group()
+
+    action_group.add_argument(
+        "file",
+        help="file to upload",
+        nargs=argparse.OPTIONAL,
+        type=Path,
+    )
+
+    parser.add_argument(
+        "-1", action="store_true", dest="one_shot", help="one-shot file",
+    )
+
     parser.add_argument(
         "-e",
         dest="expire_time",
         help="expiration time",
         metavar="TIME",
     )
-    parser.add_argument("-I", action="store_true", dest="no_id", help="no id suffix")
 
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument(
-        "file",
-        help="file to upload",
-        nargs=argparse.OPTIONAL,
-        type=Path,
+    parser.add_argument(
+        "-I", action="store_true", dest="no_id", help="no Epoch-time id suffix",
     )
-    action.add_argument(
+
+    fn_group.add_argument(
+        "-n",
+        dest="filename",
+        help="custom filename",
+        metavar="FILENAME",
+    )
+
+    action_group.add_argument(
         "-r",
         dest="remote_url",
         help="remote source URL",
         metavar="URL",
     )
-    action.add_argument(
+
+    action_group.add_argument(
         "-u",
         dest="url_to_shorten",
         help="URL to shorten",
@@ -126,15 +143,27 @@ def cli() -> argparse.Namespace:
     )
 
     parser.add_argument("-v", action="store_true", dest="verbose", help="verbose mode")
-    parser.add_argument(
+
+    fn_group.add_argument(
         "-x",
         default="",
-        dest="ext",
-        help="file extension",
-        metavar="EXT",
+        dest="suffix",
+        help='file suffix to add (including the ".")',
+        metavar="SUFFIX",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.filename and args.no_id:
+        parser.error("argument -I: not allowed with argument -f")
+
+    if args.one_shot and (args.url_to_shorten or args.remote_url):
+        parser.error(
+            "argument -1: not allowed with argument "
+            + ("-u" if args.url_to_shorten else "-r"),
+        )
+
+    return args
 
 
 def config() -> dict[str, Any]:
