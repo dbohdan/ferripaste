@@ -108,7 +108,10 @@ def cli() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "-1", action="store_true", dest="one_shot", help="one-shot file",
+        "-1",
+        action="store_true",
+        dest="one_shot",
+        help="one-shot file",
     )
 
     parser.add_argument(
@@ -119,7 +122,10 @@ def cli() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "-I", action="store_true", dest="no_id", help="no Epoch-time id suffix",
+        "-I",
+        action="store_true",
+        dest="no_id",
+        help="no Epoch-time id suffix",
     )
 
     fn_group.add_argument(
@@ -183,7 +189,7 @@ def format_request(prepared: requests.PreparedRequest) -> str:
     def format_header(header: str, value: str) -> str:
         if header == AUTHZ_HEADER:
             value = "***"
-        elif header.lower() ==  "content-length":
+        elif header.lower() == "content-length":
             value = f">={value}"
 
         return f"{header}: {value}"
