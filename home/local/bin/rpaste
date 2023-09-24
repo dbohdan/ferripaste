@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
-import tomllib
+import tomli
 
 AUTHZ_HEADER = "Authorization"
 FORMAT_MAX_BODY_LEN = 200
@@ -167,7 +167,7 @@ def cli() -> argparse.Namespace:
 
 
 def config() -> dict[str, Any]:
-    config = tomllib.loads(CONFIG_FILE.read_text())
+    config = tomli.loads(CONFIG_FILE.read_text())
 
     config["token"] = sp.run(
         ["pass", "show", config["pass-name"]],
