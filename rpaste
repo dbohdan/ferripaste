@@ -47,7 +47,8 @@ def main() -> None:
         if args.remote_url:
             files["remote"] = args.remote_url
         elif args.url_to_shorten:
-            files["url"] = args.url_to_shorten
+            field = "oneshot_url" if args.one_shot else "url"
+            files[field] = args.url_to_shorten
         else:
             field = "oneshot" if args.one_shot else "file"
             files[field] = (dest, args.file.open("rb"), "application/octet-stream")
@@ -157,10 +158,9 @@ def cli() -> argparse.Namespace:
     if args.filename and args.no_id:
         parser.error("argument -I: not allowed with argument -f")
 
-    if args.one_shot and (args.url_to_shorten or args.remote_url):
+    if args.one_shot and args.remote_url:
         parser.error(
-            "argument -1: not allowed with argument "
-            + ("-u" if args.url_to_shorten else "-r"),
+            "argument -1: not allowed with argument -r",
         )
 
     return args
