@@ -11,10 +11,10 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-import requests
+import httpx
 import tomli
 
-AUTHZ_HEADER = "Authorization"
+AUTHZ_HEADER = "authorization"
 FORMAT_MAX_BODY_LEN = 512
 CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
 TIMEOUT = 30
@@ -53,39 +53,37 @@ def main() -> None:
             field = "oneshot" if args.one_shot else "file"
             files[field] = (dest, args.file.open("rb"), "application/octet-stream")
 
-        req = requests.Request(
+        client = httpx.Client(
+            timeout=TIMEOUT,
+        )
+        req = client.build_request(
             "POST",
             conf["url"],
             headers=headers,
             files=files,
         )
-        prepared = req.prepare()
         if args.verbose:
             print(
-                format_request(prepared),
+                format_request(req),
                 file=sys.stderr,
             )
 
-        s = requests.Session()
-        resp = s.send(
-            prepared,
-            timeout=TIMEOUT,
-        )
+        resp = client.send(req)
         resp.raise_for_status()
 
         file_url = resp.text.rstrip()
         print(file_url)
 
         if not args.one_shot:
-            with requests.get(file_url, stream=True, timeout=TIMEOUT) as r:
-                if r.status_code != requests.codes.ok:
+            with httpx.stream(method="GET", timeout=TIMEOUT, url=file_url) as resp:
+                if resp.status_code != httpx.codes.OK:
                     print(
-                        f"error: URL verification failed (status {r.status_code})",
+                        f"error: URL verification failed (status {resp.status_code})",
                         file=sys.stderr,
                     )
                     sys.exit(1)
 
-    except (FileNotFoundError, requests.exceptions.RequestException) as e:
+    except (FileNotFoundError, httpx.RequestError) as e:
         if args.verbose:
             print(traceback.format_exc(), end="", file=sys.stderr)
         else:
@@ -185,27 +183,30 @@ def config() -> dict[str, Any]:
     return config
 
 
-def format_request(prepared: requests.PreparedRequest) -> str:
+def format_request(req: httpx.Request) -> str:
     def format_header(header: str, value: str) -> str:
         if header == AUTHZ_HEADER:
             value = "***"
-        elif header.lower() == "content-length":
-            value = f">={value}"
+        elif header == "content-length":
+            value = f"{value}"
 
         return f"{header}: {value}"
 
-    headers = (
-        format_header(header, value) for header, value in prepared.headers.items()
-    )
+    req.read()
 
-    pb = prepared.body
+    headers = (format_header(header, value) for header, value in req.headers.items())
+
     body = "(empty body)"
-    if pb:
-        body = str(pb) if len(pb) < FORMAT_MAX_BODY_LEN else "(body omitted for length)"
+    if req.content:
+        body = (
+            str(req.content)
+            if len(req.content) <= FORMAT_MAX_BODY_LEN
+            else "(body omitted for length)"
+        )
 
     req_info = [
         "Request:",
-        prepared.url,
+        str(req.url),
         "",
         *headers,
         "",
