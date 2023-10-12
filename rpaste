@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-import tomli
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 AUTHZ_HEADER = "authorization"
 FORMAT_MAX_BODY_LEN = 512
@@ -171,7 +175,7 @@ def cli() -> argparse.Namespace:
 
 
 def config() -> dict[str, Any]:
-    config = tomli.loads(CONFIG_FILE.read_text())
+    config = tomllib.loads(CONFIG_FILE.read_text())
 
     config["token"] = sp.run(
         ["pass", "show", config["pass-name"]],
