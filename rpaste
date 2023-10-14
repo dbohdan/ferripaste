@@ -141,18 +141,18 @@ def cli() -> argparse.Namespace:
         metavar="TIME",
     )
 
-    parser.add_argument(
-        "-I",
-        action="store_true",
-        dest="no_id",
-        help="no Epoch-time id suffix",
-    )
-
     fn_group.add_argument(
         "-f",
         dest="filename",
         help="custom filename",
         metavar="FILENAME",
+    )
+
+    parser.add_argument(
+        "-I",
+        action="store_true",
+        dest="no_id",
+        help="no Epoch-time id suffix",
     )
 
     parser.add_argument(
