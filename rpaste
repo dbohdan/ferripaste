@@ -28,64 +28,82 @@ def main() -> None:
     args = cli()
     conf = config()
 
-    dest = ""
+    dests = []
     upload_id = str(int(time.time()))
 
-    if args.file:
+    if args.files:
         if args.filename:
-            dest = args.filename
+            dests = [args.filename]
         else:
-            ext = args.file.suffix
-            dest = re.sub(r"[\s%]", "-", args.file.stem)
-            if not args.no_id:
-                dest = f"{dest}.{upload_id}"
-            dest += ext + args.suffix
+            for file in args.files:
+                ext = file.suffix
+                dest = re.sub(r"[\s%]", "-", file.stem)
+                if not args.no_id:
+                    dest = f"{dest}.{upload_id}"
+                dest += ext + args.suffix
+
+                dests.append(dest)
 
     headers = {AUTHZ_HEADER: conf["token"]}
-    files = {}
+    field = ""
+    files = []
 
     if args.expire_time:
         headers["expire"] = args.expire_time
 
     try:
         if args.remote_url:
-            files["remote"] = args.remote_url
+            field = "remote"
+            files = [args.remote_url]
         elif args.url_to_shorten:
             field = "oneshot_url" if args.one_shot else "url"
-            files[field] = args.url_to_shorten
+            files = [args.url_to_shorten]
         else:
             field = "oneshot" if args.one_shot else "file"
-            files[field] = (dest, args.file.open("rb"), "application/octet-stream")
+            files = [
+                (dest, file.open("rb"), "application/octet-stream")
+                for file, dest in zip(args.files, dests)
+            ]
 
         client = httpx.Client(
             timeout=TIMEOUT,
         )
-        req = client.build_request(
-            "POST",
-            conf["url"],
-            headers=headers,
-            files=files,
-        )
-        if args.verbose:
-            print(
-                format_request(req),
-                file=sys.stderr,
+
+        file_urls = []
+        for file in files:
+            req = client.build_request(
+                "POST",
+                conf["url"],
+                headers=headers,
+                files={field: file},
             )
+            if args.verbose:
+                print(
+                    format_request(req),
+                    file=sys.stderr,
+                )
 
-        resp = client.send(req)
-        resp.raise_for_status()
+            resp = client.send(req)
+            resp.raise_for_status()
 
-        file_url = resp.text.rstrip()
-        print(file_url)
+            file_url = resp.text.rstrip()
+            print(file_url)
+            file_urls.append(file_url)
+
+        exit_code = 0
 
         if not args.one_shot:
-            with httpx.stream(method="GET", timeout=TIMEOUT, url=file_url) as resp:
-                if resp.status_code != httpx.codes.OK:
-                    print(
-                        f"error: URL verification failed (status {resp.status_code})",
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
+            for file_url in file_urls:
+                with httpx.stream(method="GET", timeout=TIMEOUT, url=file_url) as resp:
+                    if resp.status_code != httpx.codes.OK:
+                        print(
+                            "error: URL verification failed "
+                            f"(status {resp.status_code})",
+                            file=sys.stderr,
+                        )
+                        exit_code = 1
+
+        sys.exit(exit_code)
 
     except (FileNotFoundError, httpx.RequestError) as e:
         if args.verbose:
@@ -99,13 +117,13 @@ def main() -> None:
 def cli() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
-    action_group = parser.add_mutually_exclusive_group(required=True)
     fn_group = parser.add_mutually_exclusive_group()
 
-    action_group.add_argument(
-        "file",
+    parser.add_argument(
+        "files",
         help="file to upload",
-        nargs=argparse.OPTIONAL,
+        metavar="file",
+        nargs="*",
         type=Path,
     )
 
@@ -137,14 +155,14 @@ def cli() -> argparse.Namespace:
         metavar="FILENAME",
     )
 
-    action_group.add_argument(
+    parser.add_argument(
         "-r",
         dest="remote_url",
         help="remote source URL",
         metavar="URL",
     )
 
-    action_group.add_argument(
+    parser.add_argument(
         "-u",
         dest="url_to_shorten",
         help="URL to shorten",
@@ -163,8 +181,16 @@ def cli() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    if args.filename and args.no_id:
-        parser.error("argument -I: not allowed with argument -f")
+    mutually_exclusive = (args.files, args.remote_url, args.url_to_shorten)
+    if sum(int(bool(x)) for x in mutually_exclusive) != 1:
+        parser.error("one or more file arguments, -r, or -u required")
+
+    if args.filename:
+        if args.no_id:
+            parser.error("argument -I: not allowed with argument -f")
+
+        if len(args.files) > 1:
+            parser.error("argument -f: not allowed with more than one file")
 
     if args.one_shot and args.remote_url:
         parser.error(
