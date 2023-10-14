@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import re
 import subprocess as sp
 import sys
@@ -24,7 +25,7 @@ CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
 TIMEOUT = 30
 
 
-def main() -> None:
+async def main() -> None:
     args = cli()
     conf = config()
 
@@ -65,32 +66,39 @@ def main() -> None:
                 for file, dest in zip(args.files, dests)
             ]
 
-        client = httpx.Client(
+        client = httpx.AsyncClient(
             timeout=TIMEOUT,
         )
 
+        exit_code = 0
+
         file_urls = []
-        for file in files:
-            req = client.build_request(
+        reqs = (
+            client.build_request(
                 "POST",
                 conf["url"],
                 headers=headers,
                 files={field: file},
             )
-            if args.verbose:
+            for file in files
+        )
+
+        if args.verbose:
+            for req in reqs:
                 print(
                     format_request(req),
                     file=sys.stderr,
                 )
 
-            resp = client.send(req)
-            resp.raise_for_status()
+        resps = await asyncio.gather(*[client.send(req) for req in reqs])
+
+        for resp in resps:
+            if resp.status_code != httpx.codes.OK:
+                exit_code = 1
 
             file_url = resp.text.rstrip()
             print(file_url)
             file_urls.append(file_url)
-
-        exit_code = 0
 
         if not args.one_shot:
             for file_url in file_urls:
@@ -247,4 +255,4 @@ def format_request(req: httpx.Request) -> str:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
