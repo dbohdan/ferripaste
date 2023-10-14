@@ -194,7 +194,7 @@ def cli() -> argparse.Namespace:
         "-1",
         action="store_true",
         dest="one_shot",
-        help="one-shot file",
+        help="one-shot upload",
     )
 
     parser.add_argument(
@@ -215,7 +215,7 @@ def cli() -> argparse.Namespace:
         "-I",
         action="store_true",
         dest="no_id",
-        help="no Epoch-time id suffix",
+        help="no Unix-time id suffix",
     )
 
     parser.add_argument(
