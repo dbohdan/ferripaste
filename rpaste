@@ -131,7 +131,7 @@ def cli() -> argparse.Namespace:
     )
 
     fn_group.add_argument(
-        "-n",
+        "-f",
         dest="filename",
         help="custom filename",
         metavar="FILENAME",
