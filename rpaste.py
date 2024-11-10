@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import re
+import shlex
 import subprocess as sp
 import sys
 import time
@@ -273,12 +274,13 @@ def cli() -> argparse.Namespace:
 def config() -> dict[str, Any]:
     config = tomllib.loads(CONFIG_FILE.read_text())
 
-    config["token"] = sp.run(
-        ["pass", "show", config["pass-name"]],
-        capture_output=True,
-        check=True,
-        text=True,
-    ).stdout.rstrip()
+    if "token" not in config:
+        config["token"] = sp.run(
+            shlex.split(config["token-command"]),
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.rstrip()
 
     return config
 
