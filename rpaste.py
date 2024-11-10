@@ -18,7 +18,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Any
+from typing import Any, IO, TYPE_CHECKING
 
 import httpx
 
@@ -32,8 +32,8 @@ FORMAT_MAX_BODY_LEN = 512
 CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
 TIMEOUT = 30
 
-
-ReqFiles = list[str] | list[tuple[str, IO[bytes], str]]
+if TYPE_CHECKING:
+    ReqFiles = list[str] | list[tuple[str, IO[bytes], str]]
 
 
 @dataclass(frozen=True)
