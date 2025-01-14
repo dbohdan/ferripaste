@@ -1,17 +1,22 @@
 # rpaste
 
-**rpaste** is a command-line client for [Rustypaste](https://github.com/orhun/rustypaste),
+**rpaste** is an alternative command-line client for [Rustypaste](https://github.com/orhun/rustypaste),
 a self-hosted pastebin service.
+rpaste offers different features from the official client [rustypaste-cli](https://github.com/orhun/rustypaste-cli):
 
-## Features
+- Basic password manager integration.
+  rpaste can retrieve the authentication token from a command-line password manager like [pass](https://www.passwordstore.org/) by running a command.
+- A custom file naming scheme.
+  rpaste generates unique filenames by adding Unix timestamps before the file extension.
+  This is performed independently of the Rustypaste server.
+  For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
 
-rpaste:
+## Other features
 
-- Uploads one or more files per invocation
-- Generates its own unique filenames for uploads by appending a timestamp before the file extension.
-  For example, `foo.tar.gz` can become `foo.1736864775.tar.gz`.
 - Supports expiring and one-shot uploads
-- Verifies the creation of uploads that aren't one-shot without fully downloading them
+- Verifies non-one-shot uploads without full download
+- URL shortening
+- Remote URL uploads
 
 ## Usage
 
@@ -38,10 +43,10 @@ options:
 
 ## Requirements
 
-- Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 - Either of the following:
   - [uv](https://docs.astral.sh/uv/) (recommended)
   - Python 3.11 or later with the package [HTTPX](https://python-httpx.org/)
+- Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 
 ## Installation
 
