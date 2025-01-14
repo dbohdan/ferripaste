@@ -3,6 +3,7 @@
 # dependencies = [
 #   "httpx<2",
 #   "tomli==2.*",
+#   "xdg-base-dirs==6.*",
 # ]
 # requires-python = ">=3.10"
 # ///
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Any, IO, TYPE_CHECKING
 
 import httpx
+from xdg_base_dirs import xdg_config_home
 
 try:
     import tomllib
@@ -30,7 +32,7 @@ except ModuleNotFoundError:
 
 AUTHZ_HEADER = "authorization"
 FORMAT_MAX_BODY_LEN = 512
-CONFIG_FILE = Path.home() / ".config/rpaste/config.toml"
+CONFIG_FILE = xdg_config_home() / "rpaste/config.toml"
 TIMEOUT = 30
 
 if TYPE_CHECKING:
