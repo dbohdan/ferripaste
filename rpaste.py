@@ -20,7 +20,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, IO, TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, Any
 
 import httpx
 from xdg_base_dirs import xdg_config_home
@@ -48,7 +48,7 @@ class Upload:
 
 async def main() -> None:
     args = cli()
-    conf = config()
+    conf = config(args.config)
 
     dests = []
     upload_id = str(int(time.time()))
@@ -168,8 +168,7 @@ def verify_uploads(uploads: list[Upload]) -> bool:
         if not upload.url:
             result = False
             print(
-                f"error: {upload.name} failed to upload "
-                f"with status {upload.status}",
+                f"error: {upload.name} failed to upload with status {upload.status}",
                 file=sys.stderr,
             )
 
@@ -208,6 +207,14 @@ def cli() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-c",
+        dest="config",
+        help="path to config file",
+        metavar="PATH",
+        type=Path,
+    )
+
+    parser.add_argument(
         "-e",
         dest="expire_time",
         help="expiration time",
@@ -242,7 +249,12 @@ def cli() -> argparse.Namespace:
         metavar="URL",
     )
 
-    parser.add_argument("-v", action="store_true", dest="verbose", help="verbose mode")
+    parser.add_argument(
+        "-v",
+        action="store_true",
+        dest="verbose",
+        help="verbose mode",
+    )
 
     fn_group.add_argument(
         "-x",
@@ -273,8 +285,9 @@ def cli() -> argparse.Namespace:
     return args
 
 
-def config() -> dict[str, Any]:
-    config = tomllib.loads(CONFIG_FILE.read_text())
+def config(config_path: Path | None = None) -> dict[str, Any]:
+    path = config_path if config_path else CONFIG_FILE
+    config = tomllib.loads(path.read_text())
 
     if "token" not in config:
         config["token"] = sp.run(

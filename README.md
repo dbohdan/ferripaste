@@ -6,8 +6,8 @@ a self-hosted pastebin service.
 ## Usage
 
 ```none
-usage: rpaste [-h] [-1] [-e TIME] [-f FILENAME] [-I] [-r URL] [-u URL] [-v]
-              [-x SUFFIX]
+usage: rpaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
+              [-u URL] [-v] [-x SUFFIX]
               [file ...]
 
 positional arguments:
@@ -16,6 +16,7 @@ positional arguments:
 options:
   -h, --help   show this help message and exit
   -1           one-shot upload
+  -c PATH      path to config file
   -e TIME      expiration time
   -f FILENAME  custom filename
   -I           no Unix-time id suffix
