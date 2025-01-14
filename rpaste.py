@@ -58,11 +58,13 @@ async def main() -> None:
             dests = [args.filename]
         else:
             for file in args.files:
-                ext = file.suffix
-                dest = re.sub(r"[\s%]", "-", file.stem)
+                stem, dot, ext = file.name.partition(".")
+
+                dest = re.sub(r"[\s%]", "-", stem)
                 if not args.no_id:
-                    dest = f"{dest}.{upload_id}"
-                dest += ext + args.suffix
+                    dest = dest + "." + upload_id
+
+                dest += dot + ext + args.suffix
 
                 dests.append(dest)
 
