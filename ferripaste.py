@@ -27,7 +27,7 @@ from xdg_base_dirs import xdg_config_home
 
 AUTHZ_HEADER = "authorization"
 FORMAT_MAX_BODY_LEN = 512
-CONFIG_FILE = xdg_config_home() / "rpaste/config.toml"
+CONFIG_FILE = xdg_config_home() / "ferripaste/config.toml"
 TIMEOUT = 30
 
 if TYPE_CHECKING:

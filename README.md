@@ -1,13 +1,13 @@
-# rpaste
+# Ferripaste
 
-**rpaste** is an alternative command-line client for [Rustypaste](https://github.com/orhun/rustypaste),
+**Ferripaste** is an alternative command-line client for [Rustypaste](https://github.com/orhun/rustypaste),
 a self-hosted pastebin service.
-rpaste offers different features from the official client [rustypaste-cli](https://github.com/orhun/rustypaste-cli):
+Ferripaste offers different features from the official client [rustypaste-cli](https://github.com/orhun/rustypaste-cli):
 
 - Basic password manager integration.
-  rpaste can retrieve the authentication token from a command-line password manager like [pass](https://www.passwordstore.org/) by running a command.
+  Ferripaste can retrieve the authentication token from a command-line password manager like [pass](https://www.passwordstore.org/) by running a command.
 - A custom file naming scheme.
-  rpaste generates unique filenames by adding Unix timestamps before the file extension.
+  Ferripaste generates unique filenames by adding Unix timestamps before the file extension.
   This is performed independently of the Rustypaste server.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
 
@@ -21,9 +21,9 @@ rpaste offers different features from the official client [rustypaste-cli](https
 ## Usage
 
 ```none
-usage: rpaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
-              [-u URL] [-v] [-x SUFFIX]
-              [file ...]
+usage: ferripaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
+                  [-u URL] [-v] [-x SUFFIX]
+                  [file ...]
 
 positional arguments:
   file         file to upload
@@ -52,10 +52,10 @@ options:
 
 1. Install the dependencies
 2. Clone this repository
-3. Copy `rpaste.py` as `rpaste` to a directory in `PATH` (for example, `~/.local/bin/`).
+3. Copy `ferripaste.py` as `ferripaste` to a directory in `PATH` (for example, `~/.local/bin/`).
    Change the `#!` line if you are not going to use uv.
 4. Optional: store the API token in a command-line password manager
-5. Create a configuration file in `~/.config/rpaste/config.toml` with the following contents:
+5. Create a configuration file in `~/.config/ferripaste/config.toml` with the following contents:
 
 ```toml
 # Your Rustypaste URL:
@@ -72,25 +72,25 @@ token-command = "pass show paste.example.com"
 
 ```shell
 # Upload a file.
-rpaste file.txt
+ferripaste file.txt
 
 # Upload with custom name.
-rpaste -f custom.txt file.txt
+ferripaste -f custom.txt file.txt
 
 # Upload multiple files.
-rpaste file1.txt file2.txt file3.txt
+ferripaste file1.txt file2.txt file3.txt
 
 # Create a one-shot upload.
-rpaste -1 file.txt
+ferripaste -1 file.txt
 
 # Shorten a URL.
-rpaste -u https://example.com
+ferripaste -u https://example.com
 
 # Upload from a remote URL.
-rpaste -r https://example.com/file.txt
+ferripaste -r https://example.com/file.txt
 
 # Set expiration time.
-rpaste -e 1h file.txt
+ferripaste -e 1h file.txt
 ```
 
 ## License
