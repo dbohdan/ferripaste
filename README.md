@@ -41,9 +41,7 @@ options:
 - Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 - Either of the following:
   - [uv](https://docs.astral.sh/uv/) (recommended)
-  - Python 3.10 or later with two packages:
-    - [HTTPX](https://python-httpx.org/))
-    - [tomli](https://github.com/hukkin/tomli) for Python < 3.11
+  - Python 3.11 or later with the package [HTTPX](https://python-httpx.org/)
 
 ## Installation
 

@@ -2,10 +2,9 @@
 # /// script
 # dependencies = [
 #   "httpx<2",
-#   "tomli==2.*",
 #   "xdg-base-dirs==6.*",
 # ]
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # ///
 
 from __future__ import annotations
@@ -17,6 +16,7 @@ import shlex
 import subprocess as sp
 import sys
 import time
+import tomllib
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,11 +24,6 @@ from typing import IO, TYPE_CHECKING, Any
 
 import httpx
 from xdg_base_dirs import xdg_config_home
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
 
 AUTHZ_HEADER = "authorization"
 FORMAT_MAX_BODY_LEN = 512
