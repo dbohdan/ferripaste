@@ -46,19 +46,21 @@ options:
 ## Installation
 
 1. Install the dependencies
-2. Clone this repository.
+2. Clone this repository
 3. Copy `rpaste.py` as `rpaste` to a directory in `PATH` (for example, `~/.local/bin/`).
    Change the `#!` line if you are not going to use uv.
 4. Optional: store the API token in a command-line password manager
 5. Create a configuration file in `~/.config/rpaste/config.toml` with the following contents:
 
 ```toml
-url = "<your Rustypaste URL>"
+# Your Rustypaste URL:
+url = "https://paste.example.com"
 
-# Either
-token = "<your Rustypaste token>"
-# or
-token-command = "<command to get the token>"
+# One of the two token options:
+# 1. Your literal token.
+token = "foo123"
+# 2. The command to get the token.
+token-command = "pass show paste.example.com"
 ```
 
 ## Examples
