@@ -3,6 +3,16 @@
 **rpaste** is a command-line client for [Rustypaste](https://github.com/orhun/rustypaste),
 a self-hosted pastebin service.
 
+## Features
+
+rpaste:
+
+- Uploads one or more files per invocation
+- Generates its own unique filenames for uploads by appending a timestamp before the file extension.
+  For example, `foo.tar.gz` can become `foo.1736864775.tar.gz`.
+- Supports expiring and one-shot uploads
+- Verifies the creation of uploads that aren't one-shot without fully downloading them
+
 ## Usage
 
 ```none
