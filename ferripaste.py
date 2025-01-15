@@ -2,6 +2,7 @@
 # /// script
 # dependencies = [
 #   "httpx<2",
+#   "loguru==0.7.*",
 #   "xdg-base-dirs==6.*",
 # ]
 # requires-python = ">=3.11"
@@ -23,6 +24,8 @@ from pathlib import Path
 from typing import IO, TYPE_CHECKING, Any
 
 import httpx
+import loguru
+from loguru import logger
 from xdg_base_dirs import xdg_config_home
 
 AUTHZ_HEADER = "authorization"
@@ -44,6 +47,15 @@ class Upload:
 async def main() -> None:
     args = cli()
     conf = config(args.config)
+
+    logger.configure(
+        handlers=[
+            {
+                "sink": sys.stderr,
+                "format": format_log,
+            },
+        ],
+    )
 
     dests = []
     upload_id = str(int(time.time()))
@@ -115,9 +127,9 @@ async def main() -> None:
 
     except (FileNotFoundError, httpx.RequestError) as e:
         if args.verbose:
-            print(traceback.format_exc(), end="", file=sys.stderr)
+            logger.error(traceback.format_exc())
         else:
-            print(f"error: {e}", file=sys.stderr)
+            logger.error(str(e))
 
         sys.exit(1)
 
@@ -143,10 +155,8 @@ async def upload_files(
     ]
 
     if verbose:
-        print(
-            "\n\n".join(format_request(req) for req in reqs),
-            file=sys.stderr,
-        )
+        for req in reqs:
+            logger.debug(format_request(req))
 
     resps = await asyncio.gather(
         *[client.send(req) for req in reqs],
@@ -164,20 +174,16 @@ def verify_uploads(uploads: list[Upload]) -> bool:
     for upload in uploads:
         if not upload.url:
             result = False
-            print(
-                f"error: {upload.name} failed to upload with status {upload.status}",
-                file=sys.stderr,
-            )
+            logger.error(f"{upload.name} failed to upload with status {upload.status}")
 
             continue
 
         with httpx.stream(method="GET", timeout=TIMEOUT, url=upload.url) as resp:
             if resp.status_code != httpx.codes.OK:
                 result = False
-                print(
-                    f"error: {upload.url} failed URL verification with "
-                    f"status {resp.status_code}",
-                    file=sys.stderr,
+                logger.error(
+                    f"{upload.url} failed URL verification "
+                    f"with status {resp.status_code}",
                 )
 
     return result
@@ -295,6 +301,10 @@ def config(config_path: Path | None = None) -> dict[str, Any]:
         ).stdout.rstrip()
 
     return config
+
+
+def format_log(record: loguru.Record) -> str:
+    return f"[{record['level'].name.lower()}] {record['message']}\n"
 
 
 def format_request(req: httpx.Request) -> str:
