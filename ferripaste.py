@@ -1,12 +1,4 @@
-#! /usr/bin/env -S uv run --quiet --script
-# /// script
-# dependencies = [
-#   "httpx<2",
-#   "loguru==0.7.*",
-#   "xdg-base-dirs==6.*",
-# ]
-# requires-python = ">=3.11"
-# ///
+#! /usr/bin/env python3
 
 from __future__ import annotations
 
@@ -46,7 +38,11 @@ class Upload:
     url: str
 
 
-async def main() -> None:
+def main() -> None:
+    asyncio.run(run())
+
+
+async def run() -> None:
     args = cli()
     conf = config(args.config)
 
@@ -377,4 +373,4 @@ def copy_without_exif(src: Path, dest_dir: Path) -> Path:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

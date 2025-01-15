@@ -45,27 +45,34 @@ options:
 
 ## Requirements
 
-- Either of the following:
+- One of the following:
   - [uv](https://docs.astral.sh/uv/) (recommended)
+  - [pipx](https://pipx.pypa.io/)
   - Python 3.11 or later with the package [HTTPX](https://python-httpx.org/)
 - Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 - Optional: ExifTool for Exif metadata removal
 
 ## Installation
 
-1. Install the dependencies
-2. Clone this repository
-3. Copy `ferripaste.py` as `ferripaste` to a directory in `PATH` (for example, `~/.local/bin/`).
-   Change the `#!` line if you are not going to use uv.
-4. Optional: store the API token in a command-line password manager
-5. Create a configuration file in `~/.config/ferripaste/config.toml` with the following contents:
+The recommended way to install Ferripaste is with uv.
+
+- Install the dependencies: uv, a CLI password manager (optional), ExifTool (optional)
+- Clone this repository
+- Install Ferripaste:
+
+```shell
+uv tool install --python 3.11 git+https://github.com/dbohdan/ferripaste@master
+```
+
+- Optional: store the Rustypaste authorization token in the command-line password manager
+- Create a configuration file (`~/.config/ferripaste/config.toml` on Linux and BSD) with the following contents:
 
 ```toml
 # Your Rustypaste URL:
 url = "https://paste.example.com"
 
 # One of the two token options:
-# 1. Your literal token.
+# 1. The literal token.
 token = "foo123"
 # 2. The command to get the token.
 token-command = "pass show paste.example.com"

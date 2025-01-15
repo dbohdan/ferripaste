@@ -1,0 +1,18 @@
+[project]
+name = "ferripaste"
+version = "0.3.0"
+description = "Upload files to Rustypaste"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx<2",
+  "loguru==0.7.*",
+  "xdg-base-dirs==6.*",
+]
+
+[project.scripts]
+ferripaste = 'ferripaste:main'
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
