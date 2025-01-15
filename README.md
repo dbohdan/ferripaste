@@ -10,6 +10,7 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
   Ferripaste generates unique filenames by adding Unix timestamps before the file extension.
   This is performed independently of the Rustypaste server.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
+- [Exif](https://en.wikipedia.org/wiki/Exif) metadata removal from images using [ExifTool](https://en.wikipedia.org/wiki/ExifTool)
 
 ## Other features
 
@@ -22,7 +23,7 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
 
 ```none
 usage: ferripaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
-                  [-u URL] [-v] [-x SUFFIX]
+                  [-s] [-u URL] [-v] [-x SUFFIX]
                   [file ...]
 
 positional arguments:
@@ -36,6 +37,7 @@ options:
   -f FILENAME  custom filename
   -I           no Unix-time id suffix
   -r URL       remote source URL
+  -s           strip Exif metadata from images
   -u URL       URL to shorten
   -v           verbose mode
   -x SUFFIX    file suffix to add (including the ".")
@@ -47,6 +49,7 @@ options:
   - [uv](https://docs.astral.sh/uv/) (recommended)
   - Python 3.11 or later with the package [HTTPX](https://python-httpx.org/)
 - Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
+- Optional: ExifTool for Exif metadata removal
 
 ## Installation
 

@@ -14,8 +14,10 @@ import argparse
 import asyncio
 import re
 import shlex
+import shutil
 import subprocess as sp
 import sys
+import tempfile
 import time
 import tomllib
 import traceback
@@ -80,6 +82,7 @@ async def main() -> None:
     field = ""
     names = []
     req_files: ReqFiles = []
+    temp_dir = None
 
     if args.expire_time:
         headers["expire"] = args.expire_time
@@ -93,10 +96,19 @@ async def main() -> None:
             names = req_files = [args.url_to_shorten]
         else:
             field = "oneshot" if args.one_shot else "file"
-            names = args.files[:]
+            names = processed_files = args.files[:]
+
+            if args.strip_exif:
+                temp_dir = tempfile.TemporaryDirectory()
+
+                processed_files = [
+                    copy_without_exif(file, Path(temp_dir.name)) or file
+                    for file in args.files
+                ]
+
             req_files = [
                 (dest, file.open("rb"), "application/octet-stream")
-                for file, dest in zip(args.files, dests, strict=True)
+                for file, dest in zip(processed_files, dests, strict=True)
             ]
 
         # Upload.
@@ -125,7 +137,7 @@ async def main() -> None:
 
         sys.exit(exit_code)
 
-    except (FileNotFoundError, httpx.RequestError) as e:
+    except (FileNotFoundError, httpx.RequestError, sp.CalledProcessError) as e:
         if args.verbose:
             logger.error(traceback.format_exc())
         else:
@@ -246,6 +258,13 @@ def cli() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "-s",
+        action="store_true",
+        dest="strip_exif",
+        help="strip Exif metadata from images",
+    )
+
+    parser.add_argument(
         "-u",
         dest="url_to_shorten",
         help="URL to shorten",
@@ -338,6 +357,23 @@ def format_request(req: httpx.Request) -> str:
     ]
 
     return "\n    ".join(req_info)
+
+
+def copy_without_exif(src: Path, dest_dir: Path) -> Path:
+    dest_subdir = dest_dir
+
+    i = 1
+    while dest_subdir.is_dir():
+        dest_subdir = dest_dir / str(i)
+        i += 1
+
+    dest = dest_subdir / src.name
+    dest_subdir.mkdir()
+
+    shutil.copy(src, dest)
+    sp.run(["exiftool", "-all=", "-quiet", dest], check=True)
+
+    return dest
 
 
 if __name__ == "__main__":
