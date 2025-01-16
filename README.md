@@ -27,20 +27,21 @@ usage: ferripaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
                   [file ...]
 
 positional arguments:
-  file         file to upload
+  file                  file to upload
 
 options:
-  -h, --help   show this help message and exit
-  -1           one-shot upload
-  -c PATH      path to config file
-  -e TIME      expiration time
-  -f FILENAME  custom filename
-  -I           no Unix-time id suffix
-  -r URL       remote source URL
-  -s           strip Exif metadata from images
-  -u URL       URL to shorten
-  -v           verbose mode
-  -x SUFFIX    file suffix to add (including the ".")
+  -h, --help            show this help message and exit
+  -1, --one-shot        one-shot upload
+  -c, --config PATH     path to config file
+  -e, --expire TIME     expiration time
+  -f, --filename FILENAME
+                        custom filename
+  -I, --no-id           no Unix time ID suffix
+  -r, --remote URL      remote source URL
+  -s, --strip-exif      strip Exif metadata
+  -u, --url URL         URL to shorten
+  -v, --verbose         verbose mode
+  -x, --ext SUFFIX      file suffix to add (including the ".")
 ```
 
 ## Requirements
@@ -61,7 +62,7 @@ The recommended way to install Ferripaste is with uv.
 - Install Ferripaste:
 
 ```shell
-uv tool install --python 3.11 git+https://github.com/dbohdan/ferripaste@master
+uv tool install --python 3.13 git+https://github.com/dbohdan/ferripaste@master
 ```
 
 - Optional: store the Rustypaste authorization token in the command-line password manager
