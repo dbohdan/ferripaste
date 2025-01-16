@@ -48,7 +48,7 @@ options:
 - One of the following:
   - [uv](https://docs.astral.sh/uv/) (recommended)
   - [pipx](https://pipx.pypa.io/)
-  - Python 3.11 or later with the package [HTTPX](https://python-httpx.org/)
+  - Python 3.11 or later with the package [HTTPX](https://www.python-httpx.org/)
 - Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 - Optional: ExifTool for Exif metadata removal
 
@@ -106,4 +106,4 @@ ferripaste -e 1h file.txt
 ## License
 
 MIT.
-See the [LICENSE](LICENSE) file for details.
+See the [`LICENSE`](LICENSE) file for details.
