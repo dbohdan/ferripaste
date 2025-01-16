@@ -338,8 +338,6 @@ def format_request(req: httpx.Request) -> str:
     def format_header(header: str, value: str) -> str:
         if header == AUTHZ_HEADER:
             value = "***"
-        elif header == "content-length":
-            value = f"{value}"
 
         return f"{header}: {value}"
 
