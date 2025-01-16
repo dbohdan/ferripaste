@@ -214,6 +214,7 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-1",
+        "--one-shot",
         action="store_true",
         dest="one_shot",
         help="one-shot upload",
@@ -221,6 +222,7 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-c",
+        "--config",
         dest="config",
         help="path to config file",
         metavar="PATH",
@@ -229,6 +231,7 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-e",
+        "--expire",
         dest="expire_time",
         help="expiration time",
         metavar="TIME",
@@ -236,6 +239,7 @@ def cli() -> argparse.Namespace:
 
     fn_group.add_argument(
         "-f",
+        "--filename",
         dest="filename",
         help="custom filename",
         metavar="FILENAME",
@@ -243,13 +247,15 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-I",
+        "--no-id",
         action="store_true",
         dest="no_id",
-        help="no Unix-time id suffix",
+        help="no Unix time ID suffix",
     )
 
     parser.add_argument(
         "-r",
+        "--remote",
         dest="remote_url",
         help="remote source URL",
         metavar="URL",
@@ -257,13 +263,15 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-s",
+        "--strip-exif",
         action="store_true",
         dest="strip_exif",
-        help="strip Exif metadata from images",
+        help="strip Exif metadata",
     )
 
     parser.add_argument(
         "-u",
+        "--url",
         dest="url_to_shorten",
         help="URL to shorten",
         metavar="URL",
@@ -271,6 +279,7 @@ def cli() -> argparse.Namespace:
 
     parser.add_argument(
         "-v",
+        "--verbose",
         action="store_true",
         dest="verbose",
         help="verbose mode",
@@ -278,6 +287,7 @@ def cli() -> argparse.Namespace:
 
     fn_group.add_argument(
         "-x",
+        "--ext",
         default="",
         dest="suffix",
         help='file suffix to add (including the ".")',
