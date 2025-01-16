@@ -122,7 +122,9 @@ async def run() -> None:
             verbose=args.verbose,
         )
 
-        print("\n".join(upload.url for upload in uploads if upload.url))
+        sys.stdout.write(
+            "\n".join(upload.url for upload in uploads if upload.url) + "\n"
+        )
         exit_code = (
             0 if all(upload.status == httpx.codes.OK for upload in uploads) else 1
         )
