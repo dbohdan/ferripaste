@@ -33,16 +33,28 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Upload:
+    """Represents a completed file upload."""
+
     name: str
     status: int
     url: str
 
 
 def main() -> None:
+    """Execute the coroutine run().
+
+    This is the entry point for the CLI application.
+    """
     asyncio.run(run())
 
 
 async def run() -> None:
+    """Handle the upload workflow.
+
+    Parse the command-line arguments, read the configuration,
+    copy the files and strip the copies of Exif metadata (when requested),
+    perform the uploads, and verify the results.
+    """
     args = cli()
     conf = config(args.config)
 
@@ -154,6 +166,7 @@ async def upload_files(
     names: list[str],
     verbose: bool,
 ) -> list[Upload]:
+    """Upload multiple files concurrently."""
     reqs = [
         client.build_request(
             "POST",
@@ -179,6 +192,7 @@ async def upload_files(
 
 
 def verify_uploads(uploads: list[Upload]) -> bool:
+    """Verify that uploaded files are available for download."""
     result = True
 
     for upload in uploads:
@@ -200,6 +214,7 @@ def verify_uploads(uploads: list[Upload]) -> bool:
 
 
 def cli() -> argparse.Namespace:
+    """Parse the command-line arguments."""
     parser = argparse.ArgumentParser()
 
     fn_group = parser.add_mutually_exclusive_group()
@@ -316,6 +331,11 @@ def cli() -> argparse.Namespace:
 
 
 def config(config_path: Path | None = None) -> dict[str, Any]:
+    """Load and process configuration from a TOML file.
+
+    If 'token-command' is set and 'token' isn't,
+    shell out to the command and obtain the token.
+    """
     path = config_path if config_path else CONFIG_FILE
     config = tomllib.loads(path.read_text())
 
@@ -331,10 +351,12 @@ def config(config_path: Path | None = None) -> dict[str, Any]:
 
 
 def format_log(record: loguru.Record) -> str:
+    """Format a log record."""
     return f"[{record['level'].name.lower()}] {record['message']}\n"
 
 
 def format_request(req: httpx.Request) -> str:
+    """Format an HTTPX request for debug logging."""
     def format_header(header: str, value: str) -> str:
         if header == AUTHZ_HEADER:
             value = "***"
@@ -366,6 +388,7 @@ def format_request(req: httpx.Request) -> str:
 
 
 def copy_without_exif(src: Path, dest_dir: Path) -> Path:
+    """Copy a file to a new location and strip its Exif metadata."""
     dest_subdir = dest_dir
 
     i = 1
