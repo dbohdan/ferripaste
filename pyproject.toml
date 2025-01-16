@@ -1,5 +1,5 @@
 [project]
-name = "ferripaste"
+name = "Ferripaste"
 version = "0.3.0"
 description = "Upload files to Rustypaste"
 readme = "README.md"
