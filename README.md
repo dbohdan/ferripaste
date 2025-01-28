@@ -7,7 +7,7 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
 - Basic password manager integration.
   Ferripaste can retrieve the authentication token from a command-line password manager like [pass](https://www.passwordstore.org/) by running a command.
 - A custom file naming scheme.
-  Ferripaste generates unique filenames by adding Unix timestamps before the file extension.
+  Ferripaste generates unique filenames by adding a Unix timestam/ before the file extension.
   This is performed independently of the Rustypaste server.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
 - [Exif](https://en.wikipedia.org/wiki/Exif) metadata removal from images using [ExifTool](https://en.wikipedia.org/wiki/ExifTool)
@@ -55,9 +55,9 @@ options:
 
 ## Installation
 
-The recommended way to install Ferripaste is with uv.
+The recommended way to install Ferripaste is with uv:
 
-- Install the dependencies: uv, a CLI password manager (optional), ExifTool (optional)
+- Install the dependencies: uv, a CLI password manager (optional), and ExifTool (optional)
 - Clone this repository
 - Install Ferripaste:
 
@@ -73,9 +73,9 @@ uv tool install --python 3.13 git+https://github.com/dbohdan/ferripaste@master
 url = "https://paste.example.com"
 
 # One of the two token options:
-# 1. The literal token.
+# 1. A literal token.
 token = "foo123"
-# 2. The command to get the token.
+# 2. A command to get the token.
 token-command = "pass show paste.example.com"
 ```
 
@@ -85,7 +85,7 @@ token-command = "pass show paste.example.com"
 # Upload a file.
 ferripaste file.txt
 
-# Upload with custom name.
+# Upload with a custom name.
 ferripaste -f custom.txt file.txt
 
 # Upload multiple files.
