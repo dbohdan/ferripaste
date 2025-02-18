@@ -18,7 +18,7 @@ dev = [
 ]
 
 [project.scripts]
-ferripaste = 'ferripaste:main'
+ferri = 'ferripaste:main'
 
 [build-system]
 requires = ["hatchling"]

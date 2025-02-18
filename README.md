@@ -22,9 +22,9 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
 ## Usage
 
 ```none
-usage: ferripaste [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL]
-                  [-s] [-u URL] [-v] [-x SUFFIX]
-                  [file ...]
+usage: ferri [-h] [-1] [-c PATH] [-e TIME] [-f FILENAME] [-I] [-r URL] [-s]
+             [-u URL] [-v] [-x SUFFIX]
+             [file ...]
 
 positional arguments:
   file                  file to upload
@@ -83,25 +83,25 @@ token-command = "pass show paste.example.com"
 
 ```shell
 # Upload a file.
-ferripaste file.txt
+ferri file.txt
 
 # Upload with a custom name.
-ferripaste -f custom.txt file.txt
+ferri -f custom.txt file.txt
 
 # Upload multiple files.
-ferripaste file1.txt file2.txt file3.txt
+ferri file1.txt file2.txt file3.txt
 
 # Create a one-shot upload.
-ferripaste -1 file.txt
+ferri -1 file.txt
 
 # Shorten a URL.
-ferripaste -u https://example.com
+ferri -u https://example.com
 
 # Upload from a remote URL.
-ferripaste -r https://example.com/file.txt
+ferri -r https://example.com/file.txt
 
 # Set expiration time.
-ferripaste -e 1h file.txt
+ferri -e 1h file.txt
 ```
 
 ## License
