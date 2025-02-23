@@ -5,11 +5,11 @@ a self-hosted pastebin service.
 Ferripaste offers different features from the official client [rustypaste-cli](https://github.com/orhun/rustypaste-cli):
 
 - Basic password manager integration.
-  Ferripaste can retrieve the authentication token from a command-line password manager like [pass](https://www.passwordstore.org/) by running a command.
+  Ferripaste can retrieve the authentication token from a command-line password manager like [`pass`](https://www.passwordstore.org/) by running a command.
 - A custom file naming scheme.
-  Ferripaste generates unique filenames by adding a Unix timestam/ before the file extension.
-  This is performed independently of the Rustypaste server.
+  Ferripaste generates unique filenames by adding a Unix timestamp before the file extension.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
+  This is performed independently of the Rustypaste server.
 - [Exif](https://en.wikipedia.org/wiki/Exif) metadata removal from images using [ExifTool](https://en.wikipedia.org/wiki/ExifTool)
 
 ## Other features
@@ -50,23 +50,23 @@ options:
   - [uv](https://docs.astral.sh/uv/) (recommended)
   - [pipx](https://pipx.pypa.io/)
   - Python 3.11 or later with the package [HTTPX](https://www.python-httpx.org/)
-- Optional: a command-line password manager like [pass](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
+- Optional: a command-line password manager like [`pass`](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
 - Optional: ExifTool for Exif metadata removal
 
 ## Installation
 
 The recommended way to install Ferripaste is with uv:
 
-- Install the dependencies: uv, a CLI password manager (optional), and ExifTool (optional)
-- Clone this repository
-- Install Ferripaste:
+1. Install the dependencies: uv, a CLI password manager (optional), and ExifTool (optional)
+2. Clone this repository
+3. Install Ferripaste:
 
 ```shell
 uv tool install --python 3.13 git+https://github.com/dbohdan/ferripaste@master
 ```
 
-- Optional: store the Rustypaste authorization token in the command-line password manager
-- Create a configuration file (`~/.config/ferripaste/config.toml` on Linux and BSD) with the following contents:
+4. Optional: store the Rustypaste authorization token in the command-line password manager
+5. Create a configuration file (`~/.config/ferripaste/config.toml` on Linux and BSD) with the following contents:
 
 ```toml
 # Your Rustypaste URL:
