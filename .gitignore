@@ -1,4 +1,6 @@
 /attic/
+/cmd/ferri/ferri
+/ferri
 /help
 *.swp
 /.venv/
