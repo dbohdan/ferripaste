@@ -10,7 +10,7 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
   Ferripaste generates unique filenames by adding a Unix timestamp before the file extension.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
   This is performed independently of the Rustypaste server.
-- [Exif](https://en.wikipedia.org/wiki/Exif) metadata removal from JPEG images
+- [Exif](https://en.wikipedia.org/wiki/Exif) metadata removal from JPEG and PNG images
 
 ## Other features
 

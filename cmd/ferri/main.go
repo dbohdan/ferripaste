@@ -20,7 +20,10 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/alecthomas/repr"
 	"github.com/anmitsu/go-shlex"
+	"github.com/dsoprea/go-exif/v3"
 	"github.com/dsoprea/go-jpeg-image-structure/v2"
+	logging "github.com/dsoprea/go-logging/v2"
+	"github.com/dsoprea/go-png-image-structure/v2"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/otiai10/copy"
 	"github.com/pelletier/go-toml/v2"
@@ -492,6 +495,85 @@ func verifyUploads(uploads []Upload) bool {
 	return result
 }
 
+// stripJPEGExif removes Exif data from a JPEG file and writes the result to a file.
+// Returns true if Exif data was stripped, false otherwise.
+func stripJPEGExif(outputPath string, data []byte) (bool, error) {
+	jmp := jpegstructure.NewJpegMediaParser()
+	intfc, err := jmp.ParseBytes(data)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse JPEG: %w", err)
+	}
+
+	sl := intfc.(*jpegstructure.SegmentList)
+	wasDropped, err := sl.DropExif()
+	if err != nil {
+		return false, fmt.Errorf("failed to strip Exif: %w", err)
+	}
+
+	if !wasDropped {
+		// No Exif data to remove.
+		return false, nil
+	}
+
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return false, fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer outFile.Close()
+
+	if err := sl.Write(outFile); err != nil {
+		return false, fmt.Errorf("failed to write stripped JPEG: %w", err)
+	}
+
+	return true, nil
+}
+
+// stripPNGExif removes Exif data from a PNG file and writes the result back to the file.
+// Returns true if Exif data was stripped, false otherwise.
+func stripPNGExif(outputPath string, data []byte) (bool, error) {
+	pngparser := pngstructure.NewPngMediaParser()
+	intfc, err := pngparser.ParseBytes(data)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse PNG: %w", err)
+	}
+
+	cs := intfc.(*pngstructure.ChunkSlice)
+
+	// Find the Exif chunk using library methods.
+	exifChunk, err := cs.FindExif()
+	if err != nil {
+		if logging.Is(err, exif.ErrNoExif) {
+			// No Exif data to remove.
+			return false, nil
+		} else {
+			return false, fmt.Errorf("error finding Exif in PNG: %w", err)
+		}
+	}
+
+	// Remove the chunk from the slice.
+	chunks := cs.Chunks()
+	for i, chunk := range chunks {
+		if chunk == exifChunk {
+			newChunks := append(chunks[:i], chunks[i+1:]...)
+			cs = pngstructure.NewChunkSlice(newChunks)
+
+			break
+		}
+	}
+
+	// Serialize modified chunks.
+	var buf bytes.Buffer
+	if err := cs.WriteTo(&buf); err != nil {
+		return false, fmt.Errorf("failed to serialize PNG: %w", err)
+	}
+
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		return false, fmt.Errorf("failed to write stripped PNG: %w", err)
+	}
+
+	return true, nil
+}
+
 func copyWithoutExif(src, destDir string) (string, error) {
 	i := 1
 	destSubdir := destDir
@@ -529,36 +611,27 @@ func copyWithoutExif(src, destDir string) (string, error) {
 	}
 
 	mime := mimetype.Detect(data)
-	if !mime.Is("image/jpeg") {
-		return "", fmt.Errorf("unsupported file type for Exif removal: %s", mime)
-	}
 
-	// Process JPEG.
-	jmp := jpegstructure.NewJpegMediaParser()
-	intfc, err := jmp.ParseBytes(data)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse JPEG: %w", err)
-	}
+	if mime.Is("image/jpeg") {
+		stripped, err := stripJPEGExif(dest, data)
+		if err != nil {
+			return "", err
+		}
 
-	sl := intfc.(*jpegstructure.SegmentList)
-	wasDropped, err := sl.DropExif()
-	if err != nil {
-		return "", fmt.Errorf("failed to strip Exif: %w", err)
-	}
+		if !stripped {
+			log.Warn().Msgf("%s: no Exif data found", src)
+		}
+	} else if mime.Is("image/png") {
+		stripped, err := stripPNGExif(dest, data)
+		if err != nil {
+			return "", err
+		}
 
-	if !wasDropped {
-		return dest, nil
-	}
-
-	// Write the modified file.
-	outFile, err := os.Create(dest)
-	if err != nil {
-		return "", fmt.Errorf("failed to create output file: %w", err)
-	}
-	defer outFile.Close()
-
-	if err := sl.Write(outFile); err != nil {
-		return "", fmt.Errorf("failed to write stripped JPEG: %w", err)
+		if !stripped {
+			log.Warn().Msgf("%s: no Exif data found", src)
+		}
+	} else {
+		log.Warn().Msgf("%s: unsupported type %s for Exif removal; uploaded without modification", src, mime.String())
 	}
 
 	return dest, nil
