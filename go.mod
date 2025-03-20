@@ -9,7 +9,7 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/rs/zerolog v1.33.0
-	github.com/tdewolff/argp v0.0.0-20250318160651-27d1de3a1a6e
+	github.com/tdewolff/argp v0.0.0-20250320085902-4439d1422dc0
 )
 
 require (
