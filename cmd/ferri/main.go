@@ -631,7 +631,7 @@ func copyWithoutExif(src, destDir string) (string, error) {
 			log.Warn().Msgf("%s: no Exif data found", src)
 		}
 	} else {
-		log.Warn().Msgf("%s: unsupported type %s for Exif removal; uploaded without modification", src, mime.String())
+		log.Warn().Msgf("%s: unsupported type %q for Exif removal; uploaded without modification", src, mime.String())
 	}
 
 	return dest, nil
