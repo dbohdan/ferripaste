@@ -18,8 +18,10 @@ import (
 	"time"
 
 	"github.com/adrg/xdg"
-	"github.com/anmitsu/go-shlex"
 	"github.com/alecthomas/repr"
+	"github.com/anmitsu/go-shlex"
+	"github.com/dsoprea/go-jpeg-image-structure/v2"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/otiai10/copy"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/rs/zerolog"
@@ -521,13 +523,42 @@ func copyWithoutExif(src, destDir string) (string, error) {
 		return "", fmt.Errorf("failed to copy file: %w", err)
 	}
 
-	cmd := exec.Command("exiftool", "-all=", "-quiet", dest)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
+	data, err := os.ReadFile(dest)
+	if err != nil {
+		return "", fmt.Errorf("failed to read copied file: %w", err)
+	}
 
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("failed to strip Exif metadata: %w", err)
+	mime := mimetype.Detect(data)
+	if !mime.Is("image/jpeg") {
+		return "", fmt.Errorf("unsupported file type for Exif removal: %s", mime)
+	}
+
+	// Process JPEG.
+	jmp := jpegstructure.NewJpegMediaParser()
+	intfc, err := jmp.ParseBytes(data)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse JPEG: %w", err)
+	}
+
+	sl := intfc.(*jpegstructure.SegmentList)
+	wasDropped, err := sl.DropExif()
+	if err != nil {
+		return "", fmt.Errorf("failed to strip Exif: %w", err)
+	}
+
+	if !wasDropped {
+		return dest, nil
+	}
+
+	// Write the modified file.
+	outFile, err := os.Create(dest)
+	if err != nil {
+		return "", fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer outFile.Close()
+
+	if err := sl.Write(outFile); err != nil {
+		return "", fmt.Errorf("failed to write stripped JPEG: %w", err)
 	}
 
 	return dest, nil
