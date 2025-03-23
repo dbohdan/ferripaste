@@ -5,7 +5,7 @@ a self-hosted pastebin service.
 Ferripaste offers different features from the official client [rustypaste-cli](https://github.com/orhun/rustypaste-cli):
 
 - Basic password manager integration.
-  Ferripaste can retrieve the authentication token from a command-line password manager like [`pass`](https://www.passwordstore.org/) by running a command.
+  Ferripaste can retrieve the authentication token from a command-line password manager like [`pass`](https://www.passwordstore.org/) or the developer's [pago](https://github.com/dbohdan/pago) by running a command.
 - A custom file naming scheme.
   Ferripaste generates unique filenames by adding a Unix timestamp before the file extension.
   For example, `foo.tar.gz` becomes `foo.1736864775.tar.gz`.
@@ -14,8 +14,8 @@ Ferripaste offers different features from the official client [rustypaste-cli](h
 
 ## Other features
 
-- Supports expiring and one-shot uploads
-- Verifies non-one-shot uploads without full download
+- Expiring and one-shot uploads
+- Verify non-one-shot uploads without full download
 - URL shortening
 - Remote URL uploads
 
@@ -44,7 +44,7 @@ Arguments:
 ## Requirements
 
 - Go 1.22 or later
-- Optional: a command-line password manager like [`pass`](https://en.wikipedia.org/wiki/Pass_(software)) to store the authentication token
+- Optional: a command-line password manager like `pass` to store the authentication token
 
 ## Installation
 
