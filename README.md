@@ -32,7 +32,7 @@ Options:
   -f, --filename string Custom filename
   -h, --help            Help
   -r, --remote string   Remote source URL
-  -s, --strip-exif      Strip Exif metadata
+  -s, --strip-exif      Strip Exif metadata from JPEG and PNG
   -u, --url string      URL to shorten
   -v, --verbose int     Verbose mode
   -x, --ext string      File suffix to add (including the ".")

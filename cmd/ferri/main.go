@@ -120,7 +120,7 @@ func parseArgs() Args {
 	p.AddOpt(&args.Filename, "f", "filename", "Custom filename")
 	p.AddOpt(&args.NoID, "I", "no-id", "No Unix time ID suffix")
 	p.AddOpt(&args.RemoteURL, "r", "remote", "Remote source URL")
-	p.AddOpt(&args.StripExif, "s", "strip-exif", "Strip Exif metadata")
+	p.AddOpt(&args.StripExif, "s", "strip-exif", "Strip Exif metadata from JPEG and PNG")
 	p.AddOpt(&args.URLToShorten, "u", "url", "URL to shorten")
 	p.AddOpt(argp.Count{&args.Verbose}, "v", "verbose", "Verbose mode")
 	p.AddOpt(&args.Suffix, "x", "ext", "File suffix to add (including the \".\")")
