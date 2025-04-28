@@ -48,7 +48,7 @@ Arguments:
 
 ## Installation
 
-1. Install the dependencies: Go, a CLI password manager (optional), and ExifTool (optional)
+1. Install the dependencies: Go and, optionally, a CLI password manager
 2. Install Ferripaste:
 
 ```shell
